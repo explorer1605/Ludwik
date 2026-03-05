@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import http from 'http';
-
+// import { history,goldCurrentPrice} from 'goldApi.js'
 const apiKey = process.env.TWITTER_API_KEY;
 const port = 3000;
 

@@ -4,32 +4,61 @@ import http from 'http';
 const apiKey = process.env.TWITTER_API_KEY;
 const port = 3000;
 
-const server = http.createServer(async (req, res) => {
+  let cachedTweets = null
+  let lastFetchTime = 0
+  const usernames = [
+    "elonmusk",
+    "WarrenBuffett",
+    "BillGates",
+  ]
+ 
+
+  const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
-  if (req.method === 'GET' && url.pathname === '/api/last-tweets') {
-    const username = url.searchParams.get('username');
+  
+  if(req.method === 'GET' && url.pathname === '/api/last-tweets'){
+    const now = Date.now()
 
-    if (!username) {
-      res.writeHead(400, {
+    if(cachedTweets && now - lastFetchTime < 60000){
+      res.writeHead(200, {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
       });
-      res.end(JSON.stringify({ error: 'username is required' }));
+      res.end(JSON.stringify(cachedTweets));
       return;
     }
-
     try {
-      const upstream = await fetch(`https://api.twitterapi.io/twitter/user/last_tweets?userName=${encodeURIComponent(username)}`, {
+      const results = []
+      for(const username of usernames){
+        console.log("Fetching: ", username);
+
+        const upstream = await fetch(`https://api.twitterapi.io/twitter/user/last_tweets?userName=${encodeURIComponent(username)}`, {
         headers: { 'X-API-Key': apiKey }
       });
 
-      const body = await upstream.text();
-      res.writeHead(upstream.status, {
-        'Content-Type': upstream.headers.get('content-type') || 'application/json',
+      if(!upstream.ok){
+        const errorMessage = await upstream.text()
+         console.log("Upstream blocked: ", username, upstream.status);
+         console.log("Error Response:", errorMessage);
+         continue;
+      }
+       
+        const data = await upstream.json();
+        const tweet = data?.data?.tweets?.[0];
+
+        if(tweet) results.push(tweet);
+        await new Promise(res => setTimeout(res, 5500))
+      }
+      cachedTweets = results
+      lastFetchTime = now
+
+      res.writeHead(200, {
+        'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
-      });
-      res.end(body);
+      })
+      res.end(JSON.stringify(results))
+
     } catch (err) {
       res.writeHead(500, {
         'Content-Type': 'application/json',
@@ -39,7 +68,6 @@ const server = http.createServer(async (req, res) => {
     }
     return;
   }
-
   res.writeHead(404, { 'Access-Control-Allow-Origin': '*' });
   res.end();
 });

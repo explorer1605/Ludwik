@@ -9,9 +9,13 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import os
 from urllib.parse import quote
 
+# training is not done        -> create     
+                    
 MODEL_PATH = "gold_model.pkl"
 USERNAMES = ["elonmusk", "billgates", "naval"]  # Replace or add more users
-PREDICT_API = r"C:\Users\Lenovo\Ludwik\frontend"
+# fetch half of the tweets from database and fetch only the latest tweet from twitter-> 
+
+# PREDICT_API = r"C:\Users\Lenovo\Ludwik\frontend"
 THRESHOLD = 0.0008
 
 tokenizer = AutoTokenizer.from_pretrained("ProsusAI/finbert")
@@ -19,6 +23,7 @@ nlp_model = AutoModelForSequenceClassification.from_pretrained("ProsusAI/finbert
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 nlp_model.to(device)
 
+# change the interval of training for more data
 def fetch_market(period="30d", interval="1d"):
     try:
         gold = yf.download("GC=F", period=period, interval=interval)["Close"]

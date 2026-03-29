@@ -5,7 +5,11 @@
   },
   "dependencies": {
     "@json2csv/plainjs": "^7.0.6",
+    "@supabase/supabase-js": "^2.99.3",
+    "apify-client": "^2.22.3",
     "dotenv": "^17.2.4",
+    "express": "^5.2.1",
+    "node-cron": "^4.2.1",
     "yahoo-finance2": "^3.13.2"
   }
 }
